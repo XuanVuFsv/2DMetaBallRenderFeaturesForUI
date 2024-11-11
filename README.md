@@ -1,3 +1,4 @@
+![thumbnail](https://github.com/user-attachments/assets/0c1fa582-ca4a-40d4-adf5-ad78554f2aef)
 # 2D MetaBall Render Features
 
 A Unity project featuring customizable 2D metaball render effects, leveraging the Universal Render Pipeline (URP). This project contains three unique types of 2D metaball implementations, adapted/ported from various sources.
