@@ -1,23 +1,6 @@
-![thumbnail](https://github.com/user-attachments/assets/0c1fa582-ca4a-40d4-adf5-ad78554f2aef)
-# 2D MetaBall Render Features
-
-A Unity project featuring customizable 2D metaball render effects, leveraging the Universal Render Pipeline (URP). This project contains three unique types of 2D metaball implementations, adapted/ported from various sources.
-
-## Features
-
-This package includes:
-1. **Daniel Ilett's URP Metaballs**  
-   Original tutorial and implementation: [Daniel Ilett's URP Metaballs](https://danielilett.com/2020-03-28-tut5-2-urp-metaballs/)
-
-2. **Metaball Rendering by Matias Lavik**  
-   Original tutorial and implementation: [Matias Lavik's Metaballs](https://matiaslavik.wordpress.com/computer-graphics/metaball-rendering/)
-
-3. **Brightness-Based 2D Metaballs**  
-   Adapted from project by HuvaaKoodia, modified to use perceived brightness rather than alpha values cause I couldnt figure out to make it work 😭
-   Source: [HuvaaKoodia's 2D Metaballs on GitHub](https://github.com/HuvaaKoodia/2DMetaballs)
-
-## Demo Video
-
-See it in action on YouTube: [2D MetaBall Render Features](https://youtu.be/Y49FF5VqCCw)
+Source: https://github.com/saimarei/2DMetaBallRenderFeatures
 
 ---
+
+![thumbnail](https://www.gameuidatabase.com/uploads/video/Slime-Rancher-207212024-101832-11483.mp4#t=0.1)
+Implement **Metaball Rendering by Matias Lavik**

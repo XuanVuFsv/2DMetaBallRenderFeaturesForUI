@@ -37,12 +37,13 @@ namespace Danielilett
                 renderPassEvent = settings.renderPassEvent
             };
         }
-        public override void SetupRenderPasses(ScriptableRenderer renderer, in RenderingData renderingData)
-        {
-            pass.Setup();
-        }
+        //public override void SetupRenderPasses(ScriptableRenderer renderer, in RenderingData renderingData)
+        //{
+        //    pass.Setup();
+        //}
         public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
         {
+            pass.Setup();
             renderer.EnqueuePass(pass);
         }
 

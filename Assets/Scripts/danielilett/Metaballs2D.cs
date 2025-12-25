@@ -1,19 +1,330 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 
-[RequireComponent(typeof(CircleCollider2D))]
 public class Metaballs2D : MonoBehaviour
 {
-    private new CircleCollider2D collider;
-    public Color color= Color.white;
+    public enum MetaballType
+    {
+        Sprite,     // Use CircleCollider2D
+        UI          // Use RectTransform
+    }
+
+    public enum TextureSource
+    {
+        SolidColor,     // Use solid color only
+        FromComponent,  // Auto-detect from SpriteRenderer, Image, or RawImage
+        CustomTexture   // Use custom texture
+    }
+
+    [Header("Metaball Settings")]
+    public MetaballType type = MetaballType.Sprite;
+
+    [Header("Texture Settings")]
+    public TextureSource textureSource = TextureSource.SolidColor;
+
+    [Tooltip("Used when textureSource = SolidColor")]
+    public Color color = Color.white;
+
+    [Tooltip("Used when textureSource = CustomTexture")]
+    public Texture2D customTexture;
+
+    [Header("Connection Settings")]
+    [Tooltip("Sprite: World distance | UI: Pixel distance. Only render metaball when within this distance to another metaball.")]
+    public float connectionDistance = 100f;
+
+    [Header("UI Settings")]
+    [Tooltip("Only for UI type - Use width or height for radius calculation")]
+    public bool useWidth = true;
+
+    [Tooltip("Only for UI type - Radius multiplier (0.5 = half of width/height)")]
+    [Range(0.1f, 1f)]
+    public float radiusMultiplier = 0.5f;
+
+    // Cache components
+    private CircleCollider2D circleCollider;
+    private RectTransform rectTransform;
+    private Canvas parentCanvas;
+    private Camera canvasCamera;
+    private SpriteRenderer spriteRenderer;
+    private Image imageComponent;
+    private RawImage rawImageComponent;
+
+    // Cached texture
+    private Texture2D cachedTexture;
+    private bool textureCached = false;
+
     private void Awake()
     {
-        collider = GetComponent<CircleCollider2D>();
+        // Cache components based on type
+        if (type == MetaballType.Sprite)
+        {
+            circleCollider = GetComponent<CircleCollider2D>();
+            if (circleCollider == null)
+            {
+                Debug.LogError($"Metaballs2D on {gameObject.name}: Type is Sprite but no CircleCollider2D found!");
+                return;
+            }
+
+            spriteRenderer = GetComponent<SpriteRenderer>();
+        }
+        else if (type == MetaballType.UI)
+        {
+            rectTransform = GetComponent<RectTransform>();
+            if (rectTransform == null)
+            {
+                Debug.LogError($"Metaballs2D on {gameObject.name}: Type is UI but no RectTransform found!");
+                return;
+            }
+
+            // Find parent canvas
+            parentCanvas = GetComponentInParent<Canvas>();
+
+            // Get canvas camera
+            if (parentCanvas != null)
+            {
+                if (parentCanvas.renderMode == RenderMode.ScreenSpaceOverlay)
+                {
+                    canvasCamera = null; // Overlay doesn't use camera
+                }
+                else
+                {
+                    canvasCamera = parentCanvas.worldCamera;
+                }
+            }
+
+            imageComponent = GetComponent<Image>();
+            rawImageComponent = GetComponent<RawImage>();
+        }
+
         MetaballSystem2D.Add(this);
     }
 
     public float GetRadius()
     {
-        return collider.radius;
+        switch (type)
+        {
+            case MetaballType.Sprite:
+                return GetSpriteRadius();
+
+            case MetaballType.UI:
+                return GetUIRadius();
+
+            default:
+                return 1f;
+        }
+    }
+
+    private float GetSpriteRadius()
+    {
+        if (circleCollider == null)
+            return 1f;
+
+        // Calculate actual radius with transform scale
+        float maxScale = Mathf.Max(transform.lossyScale.x, transform.lossyScale.y);
+        return circleCollider.radius * maxScale;
+    }
+
+    private float GetUIRadius()
+    {
+        if (rectTransform == null)
+            return 1f;
+
+        // Get actual size from RectTransform
+        Vector2 size = rectTransform.rect.size;
+        float dimension = useWidth ? size.x : size.y;
+
+        // Calculate base radius
+        float baseRadius = dimension * radiusMultiplier * 0.5f;
+
+        // Apply scale (lossyScale.x because canvas usually scales uniformly)
+        float finalRadius = baseRadius * rectTransform.lossyScale.x;
+
+        return finalRadius;
+    }
+
+    public Vector2 GetWorldPosition()
+    {
+        switch (type)
+        {
+            case MetaballType.Sprite:
+                return GetSpritePosition();
+
+            case MetaballType.UI:
+                return GetUIPosition();
+
+            default:
+                return transform.position;
+        }
+    }
+
+    private Vector2 GetSpritePosition()
+    {
+        if (circleCollider == null)
+            return transform.position;
+
+        // Include collider offset
+        return (Vector2)transform.position + circleCollider.offset;
+    }
+
+    private Vector2 GetUIPosition()
+    {
+        if (rectTransform == null)
+            return transform.position;
+
+        // For UI, position is already world position of RectTransform
+        return rectTransform.position;
+    }
+
+    public Color GetColor()
+    {
+        // If using FromComponent, get color from component
+        if (textureSource == TextureSource.FromComponent)
+        {
+            return GetColorFromComponent();
+        }
+
+        // Otherwise use the set color
+        return color;
+    }
+
+    private Color GetColorFromComponent()
+    {
+        // Get color from component
+        if (type == MetaballType.Sprite && spriteRenderer != null)
+        {
+            return spriteRenderer.color;
+        }
+
+        if (type == MetaballType.UI)
+        {
+            if (imageComponent != null)
+            {
+                return imageComponent.color;
+            }
+
+            if (rawImageComponent != null)
+            {
+                return rawImageComponent.color;
+            }
+        }
+
+        // Fallback to white if no component found
+        return Color.white;
+    }
+
+    public Texture2D GetTexture()
+    {
+        // Cache texture to avoid repeated lookups
+        if (textureCached)
+            return cachedTexture;
+
+        switch (textureSource)
+        {
+            case TextureSource.SolidColor:
+                cachedTexture = null;
+                break;
+
+            case TextureSource.FromComponent:
+                cachedTexture = GetTextureFromComponent();
+                break;
+
+            case TextureSource.CustomTexture:
+                cachedTexture = customTexture;
+                break;
+        }
+
+        textureCached = true;
+
+        return cachedTexture;
+    }
+
+    private Texture2D GetTextureFromComponent()
+    {
+        // Priority order: SpriteRenderer -> Image -> RawImage
+
+        // Try SpriteRenderer (for Sprite type)
+        if (type == MetaballType.Sprite && spriteRenderer != null && spriteRenderer.sprite != null)
+        {
+            return spriteRenderer.sprite.texture;
+        }
+
+        // Try Image (for UI type)
+        if (type == MetaballType.UI && imageComponent != null && imageComponent.sprite != null)
+        {
+            return imageComponent.sprite.texture;
+        }
+
+        // Try RawImage (for UI type)
+        if (type == MetaballType.UI && rawImageComponent != null && rawImageComponent.texture != null)
+        {
+            // RawImage.texture is a Texture, need to cast to Texture2D
+            Texture2D tex2D = rawImageComponent.texture as Texture2D;
+
+            if (tex2D == null)
+            {
+                Debug.LogWarning($"RawImage texture on {gameObject.name} is not a Texture2D. Type: {rawImageComponent.texture.GetType()}");
+            }
+
+            return tex2D;
+        }
+
+        return null;
+    }
+
+    public bool HasTexture()
+    {
+        return GetTexture() != null;
+    }
+
+    public float GetConnectionDistance()
+    {
+        return connectionDistance;
+    }
+
+    public MetaballType GetMetaballType()
+    {
+        return type;
+    }
+
+    public Transform GetTransform()
+    {
+        return transform;
+    }
+
+    // Clear texture cache when settings change
+    private void OnValidate()
+    {
+        textureCached = false;
+
+        if (type == MetaballType.Sprite && GetComponent<CircleCollider2D>() == null)
+        {
+            Debug.LogWarning($"Metaballs2D on {gameObject.name}: Type is Sprite but no CircleCollider2D found. Consider adding one or changing type to UI.");
+        }
+
+        if (type == MetaballType.UI && GetComponent<RectTransform>() == null)
+        {
+            Debug.LogWarning($"Metaballs2D on {gameObject.name}: Type is UI but no RectTransform found. This object is not a UI element.");
+        }
+
+        // Check for UI components in edit mode
+        if (type == MetaballType.UI && textureSource == TextureSource.FromComponent)
+        {
+            Image img = GetComponent<Image>();
+            RawImage rawImg = GetComponent<RawImage>();
+
+            if (img == null && rawImg == null)
+            {
+                Debug.LogWarning($"Metaballs2D on {gameObject.name}: TextureSource is FromComponent but no Image or RawImage component found.");
+            }
+            else if (img != null && img.sprite == null)
+            {
+                Debug.LogWarning($"Metaballs2D on {gameObject.name}: Image component found but sprite is null.");
+            }
+            else if (rawImg != null && rawImg.texture == null)
+            {
+                Debug.LogWarning($"Metaballs2D on {gameObject.name}: RawImage component found but texture is null.");
+            }
+        }
     }
 
     private void OnDestroy()

@@ -73,7 +73,7 @@ namespace Danielilett
                 metaballDataArray[i] = new Vector4(pos.x, pos.y, radius, 0.0f);
             }
 
-            source = renderingData.cameraData.renderer.cameraColorTargetHandle;
+            source = renderingData.cameraData.renderer.cameraColorTarget;
 
             cmd.SetGlobalInt(MetaballCount, metaballs.Count);
             cmd.SetGlobalVectorArray(MetaballData, metaballDataArray);
