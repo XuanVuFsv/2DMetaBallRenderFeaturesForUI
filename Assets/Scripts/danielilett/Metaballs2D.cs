@@ -17,10 +17,13 @@ public class Metaballs2D : MonoBehaviour
     }
 
     [Header("Metaball Settings")]
-    public MetaballType type = MetaballType.Sprite;
+    public MetaballType type = MetaballType.UI;
+
+    [Tooltip("Enable/disable metaball rendering")]
+    public bool renderMetaball = true;
 
     [Header("Texture Settings")]
-    public TextureSource textureSource = TextureSource.SolidColor;
+    public TextureSource textureSource = TextureSource.FromComponent;
 
     [Tooltip("Used when textureSource = SolidColor")]
     public Color color = Color.white;
@@ -37,8 +40,8 @@ public class Metaballs2D : MonoBehaviour
     public bool useWidth = true;
 
     [Tooltip("Only for UI type - Radius multiplier (0.5 = half of width/height)")]
-    [Range(0.1f, 1f)]
-    public float radiusMultiplier = 0.5f;
+    [Range(0.1f, 5f)]
+    public float radiusMultiplier = 1f;
 
     // Cache components
     private CircleCollider2D circleCollider;
@@ -55,6 +58,9 @@ public class Metaballs2D : MonoBehaviour
 
     // Track if currently registered
     private bool isRegistered = false;
+
+    // Track previous render state to detect changes
+    private bool previousRenderState = true;
 
     private void Awake()
     {
@@ -98,15 +104,45 @@ public class Metaballs2D : MonoBehaviour
             imageComponent = GetComponent<Image>();
             rawImageComponent = GetComponent<RawImage>();
         }
+
+        previousRenderState = renderMetaball;
     }
 
     private void OnEnable()
     {
-        // Register when enabled
-        if (!isRegistered)
+        // Register when enabled (if renderMetaball is true)
+        if (renderMetaball && !isRegistered)
         {
             MetaballSystem2D.Add(this);
             isRegistered = true;
+        }
+    }
+
+    private void Update()
+    {
+        // Check if renderMetaball state changed
+        if (renderMetaball != previousRenderState)
+        {
+            if (renderMetaball)
+            {
+                // Enable rendering
+                if (!isRegistered)
+                {
+                    MetaballSystem2D.Add(this);
+                    isRegistered = true;
+                }
+            }
+            else
+            {
+                // Disable rendering
+                if (isRegistered)
+                {
+                    MetaballSystem2D.Remove(this);
+                    isRegistered = false;
+                }
+            }
+
+            previousRenderState = renderMetaball;
         }
     }
 
@@ -128,6 +164,26 @@ public class Metaballs2D : MonoBehaviour
             MetaballSystem2D.Remove(this);
             isRegistered = false;
         }
+    }
+
+    public bool IsRenderingEnabled()
+    {
+        return renderMetaball;
+    }
+
+    public void EnableRendering()
+    {
+        renderMetaball = true;
+    }
+
+    public void DisableRendering()
+    {
+        renderMetaball = false;
+    }
+
+    public void ToggleRendering()
+    {
+        renderMetaball = !renderMetaball;
     }
 
     public float GetRadius()
@@ -325,7 +381,7 @@ public class Metaballs2D : MonoBehaviour
     // Public method to manually refresh registration
     public void RefreshRegistration()
     {
-        if (gameObject.activeInHierarchy && enabled)
+        if (gameObject.activeInHierarchy && enabled && renderMetaball)
         {
             if (!isRegistered)
             {
@@ -347,6 +403,12 @@ public class Metaballs2D : MonoBehaviour
     private void OnValidate()
     {
         textureCached = false;
+
+        // Update registration when renderMetaball changes in inspector
+        if (Application.isPlaying)
+        {
+            RefreshRegistration();
+        }
 
         if (type == MetaballType.Sprite && GetComponent<CircleCollider2D>() == null)
         {
