@@ -53,6 +53,9 @@ public class Metaballs2D : MonoBehaviour
     private Texture2D cachedTexture;
     private bool textureCached = false;
 
+    // Track if currently registered
+    private bool isRegistered = false;
+
     private void Awake()
     {
         // Cache components based on type
@@ -95,8 +98,36 @@ public class Metaballs2D : MonoBehaviour
             imageComponent = GetComponent<Image>();
             rawImageComponent = GetComponent<RawImage>();
         }
+    }
 
-        MetaballSystem2D.Add(this);
+    private void OnEnable()
+    {
+        // Register when enabled
+        if (!isRegistered)
+        {
+            MetaballSystem2D.Add(this);
+            isRegistered = true;
+        }
+    }
+
+    private void OnDisable()
+    {
+        // Unregister when disabled
+        if (isRegistered)
+        {
+            MetaballSystem2D.Remove(this);
+            isRegistered = false;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        // Unregister when destroyed
+        if (isRegistered)
+        {
+            MetaballSystem2D.Remove(this);
+            isRegistered = false;
+        }
     }
 
     public float GetRadius()
@@ -291,6 +322,27 @@ public class Metaballs2D : MonoBehaviour
         return transform;
     }
 
+    // Public method to manually refresh registration
+    public void RefreshRegistration()
+    {
+        if (gameObject.activeInHierarchy && enabled)
+        {
+            if (!isRegistered)
+            {
+                MetaballSystem2D.Add(this);
+                isRegistered = true;
+            }
+        }
+        else
+        {
+            if (isRegistered)
+            {
+                MetaballSystem2D.Remove(this);
+                isRegistered = false;
+            }
+        }
+    }
+
     // Clear texture cache when settings change
     private void OnValidate()
     {
@@ -325,10 +377,5 @@ public class Metaballs2D : MonoBehaviour
                 Debug.LogWarning($"Metaballs2D on {gameObject.name}: RawImage component found but texture is null.");
             }
         }
-    }
-
-    private void OnDestroy()
-    {
-        MetaballSystem2D.Remove(this);
     }
 }
