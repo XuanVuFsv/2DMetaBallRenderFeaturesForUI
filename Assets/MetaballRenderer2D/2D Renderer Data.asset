@@ -16,7 +16,9 @@ MonoBehaviour:
     debugReplacementPS: {fileID: 4800000, guid: cf852408f2e174538bcd9b7fda1c5ae7, type: 3}
   m_RendererFeatures:
   - {fileID: 5706777890800158365}
-  m_RendererFeatureMap: 9d463281418c324f
+  - {fileID: 998752691136974360}
+  - {fileID: 6099910442369901606}
+  m_RendererFeatureMap: 9d463281418c324f184eafed4748dc0d266427873a3ca754
   m_UseNativeRenderPass: 0
   m_TransparencySortMode: 0
   m_TransparencySortAxis: {x: 0, y: 1, z: 0}
@@ -59,6 +61,24 @@ MonoBehaviour:
   m_DefaultLitMaterial: {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
   m_DefaultUnlitMaterial: {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
   m_DefaultMaskMaterial: {fileID: 2100000, guid: 15d0c3709176029428a0da2f8cecf0b5, type: 2}
+--- !u!114 &998752691136974360
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 950b6cd42b60e7f49af5051d7d2f251c, type: 3}
+  m_Name: BlurBasedMetaBallFeature
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  blurShader: {fileID: 4800000, guid: 2ba69f5589566dd47925a757eef1b396, type: 3}
+  cutOutMaterial: {fileID: 2100000, guid: c067eb6f9a9da1f4390d98014c30c282, type: 2}
+  iterations: 3
+  blurSpread: 0.6
+  renderPassEvent: 0
 --- !u!114 &5706777890800158365
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -77,3 +97,21 @@ MonoBehaviour:
     outlineSize: 0
     outlineColor: {r: 1, g: 0, b: 0, a: 1}
     blendFalloff: 2
+--- !u!114 &6099910442369901606
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f4f010a07d35e1419867d42f600e52b, type: 3}
+  m_Name: Danielilett Metaballs 2D
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  settings:
+    renderPassEvent: 600
+    outlineSize: 1
+    innerColor: {r: 1, g: 1, b: 1, a: 1}
+    outlineColor: {r: 0, g: 0, b: 0, a: 1}
