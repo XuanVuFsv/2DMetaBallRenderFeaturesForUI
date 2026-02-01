@@ -11,7 +11,7 @@ public class RenderFeatureSwitcher : MonoBehaviour
 
     private void Start()
     {
-        SwitchRenderFeature(0);
+        SwitchRenderFeature(2);
     }
 
     public void SwitchRenderFeature(int featureIndex)
